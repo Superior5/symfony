@@ -1,0 +1,15 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+#test:
+#    path: /test-test/{id}
+#    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::redirectAction
+#    defaults:
+#      route: main_testTest2
+#      permanent: true
+#      keepQueryParams: true
+#
+#main_testTest2:
+#    path: /test-test2/{id}
+#    controller: App\Controller\MainController::testTest2
