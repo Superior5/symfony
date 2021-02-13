@@ -1,87 +1,86 @@
 <?php
 
+
 namespace App\Controller;
 
-use App\Entity\Comment;
+
 use App\Entity\Page;
-use App\Services\TestServices;
-use Cassandra\Date;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\ErrorHandler\DebugClassLoader;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mime\Encoder\EncoderInterface;
 
 class PageController extends AbstractController
 {
+
     /**
-     * @Route("/page", name = "page_index")
+     * @Route("/add-page", name = "addPage")
      */
-    public function index(TestServices $converter): Response
+    public function addPage(EntityManagerInterface $entityManager)
     {
-        $count = $converter->convert(1000);
 
-        return $this->render('page/index.html.twig', array(
-            "key" => $count
-        ));
-    }
-    /**
-     * @Route ("/test-twig", name = "main_test_teig")
-     */
-    public function testTwig(DebugClassLoader $classLoader) : Response
-    {
-        $pages = [
-            [
-                'title' => 'Страница 1',
-                'content' => 'Контент 1'
-            ],
-            [
-                'title' => 'Страница 2',
-                'content' => 'Контент 2'
-            ],
-            [
-                'title' => 'Страница 3',
-                'content' => 'Контент 3'
-            ],
+        $page = new Page();
+        $page->setContent('Это контент или содержание ' . $i);
+        $page->setTitle("Это заголовок " . $i);
+        $page->setPublish(false);
 
-        ];
+        $entityManager->persist($page);
+        $entityManager->flush();
 
-        $temperature = 35;
-        $today = new \DateTime();
-        return $this->render('page/index.html.twig', [
-            'pages' => $pages,
-            'temperature' => $temperature,
-            'today' => $today
-        ]);
+        return new Response('<HTML><body>Объект добавлен</body></HTML>');
     }
 
     /**
-     * @Route ("/add-comment", name="page_comment")
-     */
-    public function addComment(EntityManagerInterface $entityManager)
-    {
-        $page = $entityManager ->getRepository(Page::class)->findOneBy(['id'=>'2']);
-
-        $comment = new Comment();
-        $comment ->setContent("Содержиоме коммента ghtyy");
-        $comment ->setPage($page);
-
-        $entityManager ->persist($comment);
-        $entityManager -> flush();
-//        $comment ->setPage()
-        return new Response('<html><body>Комментарий добавлен</body></html>');
-    }
-
-
-    /**
-     * @Route ("/show-page/{id}", name = 'showPage')
+     * @Route("/show-page/{id}", name = "showPage")
      */
     public function showPage(Page $page)
     {
-        return $this->render('page/index.html.twig',[
-            'pages' => $page
+//        $repository = $entityManager->getRepository(Page::class);
+//        $page = $repository->find($id);
+//        if(!$page){
+//            throw $this->createNotFoundException(sprintf('Страницы с id: "%s", не найдено', $id));
+//        }
+//        dd($page);
+
+        return $this->render('page.html.twig', [
+            'page' => $page,
         ]);
+
+    }
+
+    /**
+     * @Route("/edit-page/{id}", name="editPage")
+     */
+    public function editPage(Page $page, EntityManagerInterface $entityManager)
+    {
+        $page->setTitle("Обновленный заголовок");
+        $page->setContent('Обновленное содержание');
+        $page->setPublish(true);
+
+        $entityManager->flush();
+
+        return new Response('<html><body><h1>Данные обновлены</h1></body></html>');
+    }
+
+    /**
+     * @Route("/delete-page/{id}", name = "deletPage")
+     */
+    public function deletePage(Page $page, EntityManagerInterface $entityManager)
+    {
+        $entityManager->remove($page);
+        $entityManager->flush();
+        return new Response('Данные удалены');
+    }
+
+    /**
+     * @Route("/index-page", name="indexPage")
+     */
+
+
+    public function indexPage(EntityManagerInterface $entityManager)
+    {
+        $pages = $entityManager->getRepository(Page::class)->findBy(['publish' => true], ['id' => 'ASC']);
+        dd($pages);
     }
 }
-
